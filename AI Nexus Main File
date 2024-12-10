@@ -1,0 +1,48 @@
+import streamlit as st
+import google.generativeai as genai
+import google.ai.generativelanguage as glm
+from PIL import Image
+
+# Configure API Key
+API_KEY = 'AIzaSyCqtLpv8_yReyvoFMqj6OUpoZVtK9ug5-s'
+genai.configure(api_key=API_KEY)
+
+# Streamlit App Configuration
+st.set_page_config(page_title="AI Nexus", page_icon="📸", layout="centered", initial_sidebar_state='collapsed')
+
+st.header("AI Nexus")
+
+# Upload Image
+uploaded_file = st.file_uploader("Choose an Image file", accept_multiple_files=False, type=['jpg', 'png'])
+
+if uploaded_file is not None:
+    # Display Uploaded Image
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
+
+    # Retrieve Image Data
+    bytes_data = uploaded_file.getvalue()
+
+    # Button to Trigger Analysis
+    if st.button("Analyzing the Given Image"):
+        try:
+            # Use the updated model
+            model = genai.GenerativeModel('gemini-1.5-flash')
+
+            response = model.generate_content(
+                glm.Content(
+                    parts=[
+                        glm.Part(text="Write a short, you know this? What is this?"),
+                        glm.Part(inline_data=glm.Blob(mime_type='image/jpeg', data=bytes_data)),
+                    ],
+                ),
+                stream=True
+            )
+
+            # Wait for Response
+            response.resolve()
+
+            # Display AI Response
+            st.write(response.text)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
